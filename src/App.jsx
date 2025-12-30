@@ -22,6 +22,15 @@ function App() {
       .catch(error => toast.error("Failed to load shipment data. Error:" + error))
   }, []) // run once on mount
 
+  const details = [
+    { label: 'Order Number', value: selectedShipment?.orderNo },
+    { label: 'Date', value: selectedShipment?.date },
+    { label: 'Customer', value: selectedShipment?.customer },
+    { label: 'Tracking number', value: selectedShipment?.trackingNo },
+    { label: 'Status', value: selectedShipment?.status },
+    { label: 'Consignee', value: selectedShipment?.consignee },
+  ];
+
   return (
     <>
       <CssBaseline />
@@ -76,76 +85,26 @@ function App() {
             p: 3, 
             width: { xs: 400, sm: 600, md: 800, lg: 900 }
           }}>
+            <Typography variant="h5" sx={{ mb: 2 }}>Shipment Details</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              
-              <Box sx={{ flex: '1 1 45%' }}>
-                <Typography 
-                  variant="subtitle2" 
-                  fontWeight="bold"
-                  sx={{ mb: 0.5 }}
-                >
-                  Order Number:
-                </Typography>
-                <Box sx={{ 
-                  bgcolor: 'grey.100',
-                  p: 1,
-                  borderRadius: 1
-                }}>
-                  <Typography>{selectedShipment?.orderNo}</Typography>
+              {details.map((item, idx) => (
+                <Box sx={{ flex: '1 1 45%' }} key={idx}>
+                  <Typography 
+                    variant="subtitle2" 
+                    fontWeight="bold"
+                    sx={{ mb: 0.5 }}
+                  >
+                    {item.label}
+                  </Typography>
+                  <Box sx={{ 
+                    bgcolor: 'grey.100',
+                    p: 1,
+                    borderRadius: 1
+                  }}>
+                    <Typography>{item.value}</Typography>
+                  </Box>
                 </Box>
-              </Box>
-
-              <Box sx={{ flex: '1 1 45%' }}>
-                <Typography 
-                  variant="subtitle2" 
-                  fontWeight="bold"
-                  sx={{ mb: 0.5 }}
-                >
-                  Customer:
-                </Typography>
-                <Box sx={{ 
-                  bgcolor: 'grey.100',
-                  p: 1,
-                  borderRadius: 1
-                }}>
-                  <Typography>{selectedShipment?.customer}</Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ flex: '1 1 45%' }}>
-                <Typography 
-                  variant="subtitle2" 
-                  fontWeight="bold"
-                  sx={{ mb: 0.5 }}
-                >
-                  Status:
-                </Typography>
-                <Box sx={{ 
-                  bgcolor: 'grey.100',
-                  p: 1,
-                  borderRadius: 1
-                }}>
-                  <Typography>{selectedShipment?.status}</Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ flex: '1 1 45%' }}>
-                <Typography 
-                  variant="subtitle2" 
-                  fontWeight="bold"
-                  sx={{ mb: 0.5 }}
-                >
-                  Consignee:
-                </Typography>
-                <Box sx={{ 
-                  bgcolor: 'grey.100',
-                  p: 1,
-                  borderRadius: 1
-                }}>
-                  <Typography>{selectedShipment?.consignee}</Typography>
-                </Box>
-              </Box>
-
+              ))}
             </Box>
           </Box>
         </Popover>
