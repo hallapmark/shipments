@@ -1,26 +1,18 @@
-import React, { useEffect, useState } from 'react'
-import { toast } from 'react-toastify';
+import { useEffect, useState } from 'react'
+import { toast, ToastContainer } from 'react-toastify';
 import Paper from '@mui/material/Paper';
-import { Box, Grid, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, CssBaseline } from '@mui/material';
+import { Box, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, CssBaseline } from '@mui/material';
 import DetailsIcon from '@mui/icons-material/Details';
 import IconButton from "@mui/material/IconButton";
+import DeleteForever from '@mui/icons-material/DeleteForever';
 
 function App() {
   const [shipments, setShipments] = useState([]);
   const [selectedShipment, setSelectedShipment] = useState(null);
 
-
-  // popover
+  // popover. If there's an anchor set for the popover, it should open
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl); 
-  // if there's an anchor set for the popover, it should open
-
-  useEffect(() => {
-    fetch("https://my.api.mockaroo.com/shipments.json?key=5e0b62d0")
-      .then(res => res.json())
-      .then(data => setShipments(data))
-      .catch(error => toast.error("Failed to load shipment data. Error:" + error))
-  }, []) // run once on mount
 
   const details = [
     { label: 'Order Number', value: selectedShipment?.orderNo },
@@ -30,6 +22,21 @@ function App() {
     { label: 'Status', value: selectedShipment?.status },
     { label: 'Consignee', value: selectedShipment?.consignee },
   ];
+
+  useEffect(() => {
+    fetch("https://my.api.mockaroo.com/shipments.json?key=5e0b62d0")
+      .then(res => res.json())
+      .then(data => setShipments(data))
+      .catch(error => toast.error("Failed to load shipment data. Error:" + error))
+  }, []) // run once on mount
+
+  // Simulated delete (no backend delete). We will only 'delete' in-memory. 
+  // Refresh will restore
+  const deleteItem = (idx) => {
+    shipments.splice(idx, 1);
+    setShipments(shipments.slice());
+    toast.success("Shipment data deleted.");
+  }
 
   return (
     <>
@@ -67,6 +74,11 @@ function App() {
                       <DetailsIcon />
                     </IconButton>
                   </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => deleteItem(index)}>
+                      <DeleteForever />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -89,18 +101,10 @@ function App() {
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {details.map((item, idx) => (
                 <Box sx={{ flex: '1 1 45%' }} key={idx}>
-                  <Typography 
-                    variant="subtitle2" 
-                    fontWeight="bold"
-                    sx={{ mb: 0.5 }}
-                  >
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5 }}>
                     {item.label}
                   </Typography>
-                  <Box sx={{ 
-                    bgcolor: 'grey.100',
-                    p: 1,
-                    borderRadius: 1
-                  }}>
+                  <Box sx={{ bgcolor: 'grey.100', p: 1, borderRadius: 1 }}>
                     <Typography>{item.value}</Typography>
                   </Box>
                 </Box>
@@ -109,6 +113,7 @@ function App() {
           </Box>
         </Popover>
       </Box>
+      <ToastContainer />
     </>
   )
 }
