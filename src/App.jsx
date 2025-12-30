@@ -23,18 +23,53 @@ function App() {
     { label: 'Consignee', value: selectedShipment?.consignee },
   ];
 
+  const loadBackup = () => {
+    fetch('/data/shipments.json')
+      .then(r => r.json())
+      .then(parsed => {
+        if (Array.isArray(parsed)) {
+          setShipments(parsed);
+          toast.info('Using backup frontend shipments.json file.');
+        } else {
+          setShipments([]);
+          toast.error('Backup file did not contain a valid shipments array.');
+        }
+      })
+      .catch(() => {
+        setShipments([]);
+        toast.error('Failed to load backup file.');
+      });
+  };
+
   useEffect(() => {
     fetch("https://my.api.mockaroo.com/shipments.json?key=5e0b62d0")
       .then(res => res.json())
-      .then(data => setShipments(data))
-      .catch(error => toast.error("Failed to load shipment data. Error:" + error))
+      .then(data => {
+        if (Array.isArray(data)) {
+          setShipments(data);
+          return;
+        }
+
+        // Non-array response from API —> try backup file
+        const msg = data && (data.message || data.error) ? (data.message || data.error) : 'Unexpected response from server';
+        toast.error('Failed to load shipment data: ' + msg + '. Attempting to use backup file...');
+
+        loadBackup();
+      })
+      .catch(error => {
+        // error —> try backup file
+        toast.error("Failed to load shipment data. Error:" + error + '. Attempting to use backup file...');
+        loadBackup();
+      })
   }, []) // run once on mount
 
   // Simulated delete (no backend delete). We will only 'delete' in-memory. 
   // Refresh will restore
   const deleteItem = (idx) => {
-    shipments.splice(idx, 1);
-    setShipments(shipments.slice());
+    if (!Array.isArray(shipments)) return;
+    const newShipments = shipments.slice();
+    newShipments.splice(idx, 1);
+    setShipments(newShipments);
     toast.success("Shipment data deleted.");
   }
 
@@ -56,28 +91,36 @@ function App() {
               </TableRow>
             </TableHead>
             <TableBody>
-              { shipments.map((shipment, index) => 
-                <TableRow key={index}>
-                  <TableCell>{shipment.orderNo}</TableCell>
-                  <TableCell>{shipment.date}</TableCell>
-                  <TableCell>{shipment.customer}</TableCell>
-                  <TableCell>{shipment.trackingNo}</TableCell>
-                  <TableCell>{shipment.status}</TableCell>
-                  <TableCell>{shipment.consignee}</TableCell>
-                  <TableCell>
-                    <IconButton 
-                      onClick={(event) => {
-                        setAnchorEl(event.currentTarget);
-                        setSelectedShipment(shipment);
-                      }}
-                    >
-                      <DetailsIcon />
-                    </IconButton>
-                  </TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => deleteItem(index)}>
-                      <DeleteForever />
-                    </IconButton>
+              { Array.isArray(shipments) && shipments.length > 0 ? (
+                shipments.map((shipment, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{shipment.orderNo}</TableCell>
+                    <TableCell>{shipment.date}</TableCell>
+                    <TableCell>{shipment.customer}</TableCell>
+                    <TableCell>{shipment.trackingNo}</TableCell>
+                    <TableCell>{shipment.status}</TableCell>
+                    <TableCell>{shipment.consignee}</TableCell>
+                    <TableCell>
+                      <IconButton 
+                        onClick={(event) => {
+                          setAnchorEl(event.currentTarget);
+                          setSelectedShipment(shipment);
+                        }}
+                      >
+                        <DetailsIcon />
+                      </IconButton>
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => deleteItem(index)}>
+                        <DeleteForever />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <Typography variant="body2" color="text.secondary">No shipments available.</Typography>
                   </TableCell>
                 </TableRow>
               )}
@@ -113,7 +156,7 @@ function App() {
           </Box>
         </Popover>
       </Box>
-      <ToastContainer />
+      <ToastContainer autoClose={8000} />
     </>
   )
 }
